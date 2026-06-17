@@ -6,6 +6,8 @@ export const auth = betterAuth({
   database: prismaAdapter(dbClient, {
     provider: 'sqlite'
   }),
+
+  baseURL: process.env.BETTER_AUTH_URL,
   // Adicionamos o provedor do Google aqui para o Better Auth saber o que fazer
   socialProviders: {
     google: {
