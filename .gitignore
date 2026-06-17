@@ -8,7 +8,11 @@ lerna-debug.log*
 
 # database
 *.sqlite
+# Ignorar os bancos de dados locais do SQLite
+prisma/*.db
+prisma/*.db-journal
 *.db
+*.db-journal
 
 # package-json
 package-json.lock
