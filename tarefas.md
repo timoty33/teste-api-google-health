@@ -5,10 +5,10 @@
 - Iniciar Bun
 - Iniciar Biome
 - Configurar DB
+- Configurar API no Google
 
 ## Falta:
 
-- Configurar API no Google
 - Configurar Servidor
 - Usar Better Auth
 - Testar

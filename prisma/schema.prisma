@@ -6,41 +6,36 @@ datasource db {
   provider = "sqlite"
 }
 
-model User {
-  id            String    @id @default(uuid())
-  name          String
-  email         String    @unique
-  emailVerified Boolean
-  image         String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+model Usuarios {
+  id String @id @default(uuid())
+  nome String
+  email String @unique
+  criadoEm DateTime @default(now())
 
-  sessions      Session[]
-  accounts      Account[]
+  contas Contas[]
+  sessoes Sessoes[]
 }
 
-model Session {
-  id        String   @id @default(uuid())
-  expiresAt DateTime
-  token     String   @unique
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+model Contas {
+  id Int @default(autoincrement())
+  usuarioId String
+  provedor String
+  provedorId String
+  acessToken String
+  refreshToken String?
+  tokenExpiry DateTime?
+
+  usuario Usuarios @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  @@unique([provedor, provedorId])
 }
 
-model Account {
-  id                    String    @id @default(uuid())
-  accountId             String
-  providerId            String
-  userId                String
-  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  accessToken           String?
-  refreshToken          String?
-  idToken               String?
-  accessTokenExpiresAt  DateTime?
-  refreshTokenExpiresAt DateTime?
-  scope                 String?
-  createdAt             DateTime  @default(now())
-  updatedAt             DateTime  @updatedAt
+model Sessoes {
+  id          String   @id // O token gerado para o Cookie (pode ser um token aleatório longo)
+  usuarioId   String
+  userAgent   String?
+  ipAddress   String?
+  expiraEm    DateTime
+  criadoEm    DateTime @default(now())
+
+  usuario     Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
 }
