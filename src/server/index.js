@@ -1,9 +1,10 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import fastifyCookie from '@fastify/cookie';
 import fastifyStatic from '@fastify/static';
-import swagger from '@fastify/swagger';
-import swaggerUI from '@fastify/swagger-ui';
 import Fastify from 'fastify';
+import { authHandlers } from './auth.js';
+import { healthHandlers } from './health.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -17,18 +18,13 @@ app.register(fastifyStatic, {
   prefix: '/public/'
 });
 
-app.register(swagger, {
-  openapi: {
-    info: {
-      title: 'Teste API do Google Health',
-      version: '1.0.0'
-    }
-  }
+await app.register(fastifyCookie, {
+  secret: process.env.COOKIE_SECRET
 });
 
-app.register(swaggerUI, {
-  routePrefix: '/docs'
-});
+await app.register(authHandlers, { prefix: '/api/auth' });
+
+await app.register(healthHandlers, { prefix: '/api/health' });
 
 app.get('/', (_, res) => {
   res.send({ hello: 'world' });
