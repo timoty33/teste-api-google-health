@@ -34,9 +34,11 @@ export async function authHandlers(app) {
       prompt: 'consent',
       access_type: 'offline',
       scope: [
-        // auth
+        // profile
         'https://www.googleapis.com/auth/userinfo.profile',
         'https://www.googleapis.com/auth/userinfo.email',
+        'https://www.googleapis.com/auth/user.birthday.read',
+        'https://www.googleapis.com/auth/user.gender.read',
         'openid',
 
         // health
@@ -173,8 +175,7 @@ export async function auth(req, res) {
       version: 'v4',
       auth: authClient
     });
-
-    req.oAuthClient = authClient;
+    req.peopleClient = google.people({ version: 'v1', auth: authClient });
     req.accessToken = contaGoogle.acessToken;
   } catch (err) {
     req.log?.error?.(err);

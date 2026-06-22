@@ -5,6 +5,7 @@ import fastifyStatic from '@fastify/static';
 import Fastify from 'fastify';
 import { authHandlers } from './auth.js';
 import { healthHandlers } from './health.js';
+import { peopleHandlers } from './people.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -25,6 +26,8 @@ await app.register(fastifyCookie, {
 await app.register(authHandlers, { prefix: '/api/auth' });
 
 await app.register(healthHandlers, { prefix: '/api/health' });
+
+await app.register(peopleHandlers, { prefix: '/api/people' });
 
 app.get('/', (_, res) => {
   res.send({ hello: 'world' });
