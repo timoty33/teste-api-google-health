@@ -6,36 +6,52 @@ datasource db {
   provider = "sqlite"
 }
 
-model Usuarios {
+model Users {
   id String @id @default(uuid())
-  nome String
+  name String
   email String @unique
-  criadoEm DateTime @default(now())
+  createdAt DateTime @default(now())
 
-  contas Contas[]
-  sessoes Sessoes[]
+  Accounts Accounts[]
+  Sessions Sessions[]
+  healthProfiles HealthProfiles[]
 }
 
-model Contas {
+model Accounts {
   id Int @id @default(autoincrement())
-  usuarioId String
-  provedor String
-  provedorId String
-  acessToken String
+  userId String
+  provider String
+  providerId String
+  accessToken String
   refreshToken String?
   tokenExpiry DateTime?
 
-  usuario Usuarios @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
-  @@unique([provedor, provedorId])
+  user Users @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([provider, providerId])
 }
 
-model Sessoes {
-  id          String   @id // O token gerado para o Cookie (pode ser um token aleatório longo)
-  usuarioId   String
+model Sessions {
+  id          String   @id
+  userId   String
   userAgent   String?
   ipAddress   String?
-  expiraEm    DateTime
-  criadoEm    DateTime @default(now())
+  expiresIn    DateTime
+  createdAt    DateTime @default(now())
 
-  usuario     Usuarios  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  user     Users  @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model HealthProfiles {
+  id Int @id @default(autoincrement())
+  userId String
+  firstName String
+  lastName String
+  weight Int
+  weightSampleTime DateTime?
+  height Int
+  heightSampleTime DateTime?
+  age String?
+  objective String
+
+  user     Users  @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

@@ -9,18 +9,18 @@ export const oAuthClient = new OAuth2Client(
   'http://localhost:3000/api/auth/callback'
 );
 
-// atualiza o acess token toda vez que muda
+// atualiza o access token toda vez que muda
 oAuthClient.on('tokens', async (newTokens) => {
   if (newTokens.access_token) {
     console.log('🔄 Um novo access token foi gerado automaticamente pelo Google!');
 
-    await dbClient.contas.updateMany({
+    await dbClient.Accounts.updateMany({
       where: {
-        provedor: 'google',
+        provider: 'google',
         refreshToken: oAuthClient.credentials.refresh_token
       },
       data: {
-        acessToken: newTokens.access_token,
+        accessToken: newTokens.access_token,
         tokenExpiry: newTokens.expiry_date ? new Date(newTokens.expiry_date) : undefined
       }
     });
@@ -69,18 +69,18 @@ export async function authHandlers(app) {
       })
     ).getPayload();
 
-    const contaCriada = await dbClient.contas.upsert({
-      where: { provedor_provedorId: { provedor: 'google', provedorId: payload.sub } },
+    const contaCriada = await dbClient.Accounts.upsert({
+      where: { provider_providerId: { provider: 'google', providerId: payload.sub } },
       create: {
-        usuario: { create: { nome: payload.name, email: payload.email } },
-        provedor: 'google',
-        provedorId: payload.sub,
-        acessToken: tokens.tokens.access_token,
+        usuario: { create: { name: payload.name, email: payload.email } },
+        provider: 'google',
+        providerId: payload.sub,
+        accessToken: tokens.tokens.access_token,
         refreshToken: tokens.tokens.refresh_token,
         tokenExpiry: new Date(tokens.tokens.expiry_date)
       },
       update: {
-        acessToken: tokens.tokens.access_token,
+        accessToken: tokens.tokens.access_token,
         tokenExpiry: new Date(tokens.tokens.expiry_date),
         ...(tokens.tokens.refresh_token && { refreshToken: tokens.tokens.refresh_token })
       },
@@ -100,13 +100,13 @@ export async function authHandlers(app) {
     const userAgent = req.headers['user-agent'];
     const ipAddress = req.ip;
 
-    await dbClient.sessoes.create({
+    await dbClient.Sessions.create({
       data: {
         id: tokenSessao,
         userAgent,
         ipAddress,
-        expiraEm,
-        usuarioId: contaCriada.usuarioId
+        expiresIn,
+        userId: contaCriada.userId
       }
     });
 
@@ -125,7 +125,7 @@ export async function authHandlers(app) {
 
     if (sessionId) {
       // deletar do DB
-      dbClient.sessoes.delete({
+      dbClient.Sessions.delete({
         where: { id: sessionId }
       });
     }
@@ -143,17 +143,17 @@ export async function auth(req, res) {
     const sessionId = req.cookies.session_id;
     if (!sessionId) return res.status(401).send('Usuário não fez o login!');
 
-    const session = await dbClient.sessoes.findFirst({
+    const session = await dbClient.Sessions.findFirst({
       where: { id: sessionId },
-      include: { usuario: { include: { contas: true } } }
+      include: { usuario: { include: { Accounts: true } } }
     });
 
-    if (!session || session.expiraEm < new Date()) {
+    if (!session || session.expiresIn < new Date()) {
       res.clearCookie('session_id', { path: '/' });
       return res.status(401).send('Sessão expirada ou inexistente!');
     }
 
-    const contaGoogle = session.usuario.contas.find((c) => c.provedor === 'google');
+    const contaGoogle = session.user.Accounts.find((c) => c.provider === 'google');
     if (!contaGoogle) {
       return res.status(401).send({ error: 'Usuário não possui conta do Google vinculada!' });
     }
@@ -166,7 +166,7 @@ export async function auth(req, res) {
     );
 
     authClient.setCredentials({
-      access_token: contaGoogle.acessToken,
+      access_token: contaGoogle.accessToken,
       refresh_token: contaGoogle.refreshToken,
       expiry_date: contaGoogle.tokenExpiry?.getTime()
     });
@@ -176,7 +176,7 @@ export async function auth(req, res) {
       auth: authClient
     });
     req.peopleClient = google.people({ version: 'v1', auth: authClient });
-    req.accessToken = contaGoogle.acessToken;
+    req.accessToken = contaGoogle.accessToken;
   } catch (err) {
     req.log?.error?.(err);
     return res.status(500).send({ error: 'Falha ao autenticar usuário' });
